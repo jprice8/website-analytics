@@ -40,10 +40,6 @@ func main() {
 
 	db.Create(&Album{ID: "4", Title: "Easy Wind", Artist: "Grateful Dead", Price: 1.99})
 
-	// Read
-	var album Album
-	db.First(&album, 4) // Find album with integar primary key
-
 	router := gin.Default()
 
 	v1 := router.Group("/api")
