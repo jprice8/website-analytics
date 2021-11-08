@@ -1,50 +1,63 @@
 package main
 
 import (
+	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/jprice8/website-analytics/shared"
 	"github.com/jprice8/website-analytics/metrics"
+	"github.com/jprice8/website-analytics/shared"
+	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-// album represents data about a record album.
-type Album struct {
-	ID     string  `json:"id"`
-	Title  string  `json:"title"`
-	Artist string  `json:"artist"`
-	Price  float64 `json:"price"`
-}
+var db *gorm.DB
+var err error
 
-// albums slice to seed record album data.
-var albums = []Album{
-	{ID: "1", Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-	{ID: "2", Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-	{ID: "3", Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
-}
+func listHits(c *gin.Context) {
+	// Query for data
+	var hits []metrics.Hit
+	err := db.Find(&hits).Error
+	if err != nil {
+		c.JSON(http.StatusBadRequest, shared.NewError("listHits", errors.New("problem with everything")))
+		return
+	}
 
-func getAlbums(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, albums)
-}
+	jsonEncoded, err := json.Marshal(&hits)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, shared.NewError("jsonEncoded", errors.New("problem with encoding the json")))
+	}
 
-func Migrate(db *gorm.DB) {
-	db.AutoMigrate(&metrics.PageViewModel{})
-	db.AutoMigrate(&Album{})
+	c.JSON(http.StatusOK, gin.H{"hits": jsonEncoded})
 }
 
 func main() {
+	db, err = gorm.Open(sqlite.Open("test1.db"), &gorm.Config{})
+	if err != nil {
+		panic("Failed to connect to database :(")
+	}
 
-	db := shared.Init()
-	Migrate(db)
+	// Migrate the schema
+	db.AutoMigrate(&metrics.Hit{})
 
-	db.Create(&Album{ID: "4", Title: "Easy Wind", Artist: "Grateful Dead", Price: 1.99})
+	// Create sample url visit
+	db.Create(&metrics.Hit{Url: "jprice.io"})
+	// Find all page views.
+	var hits []metrics.Hit
+	db.Find(&hits)
+	fmt.Println(hits)
+
+	// Output the users from the DB json encoded
+	jsonEncoded, _ := json.Marshal(&hits)
+	fmt.Println(jsonEncoded)
 
 	router := gin.Default()
 
 	v1 := router.Group("/api")
-	metrics.PageViewsRegister(v1.Group("/metrics"))
-
+	v1.GET("/", listHits)
+	// metrics.PageViewsRegister(v1.Group("/metrics"))
 
 	router.Run("localhost:8080")
 }

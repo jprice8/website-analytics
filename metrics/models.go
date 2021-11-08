@@ -1,20 +1,23 @@
 package metrics
 
 import (
+	"fmt"
+
 	"github.com/jprice8/website-analytics/shared"
 	"gorm.io/gorm"
 )
 
-type PageViewModel struct {
+type Hit struct {
 	gorm.Model
-	url			string 
+	Url		string		`json:"url"` 
 }
 
-func getAllPageViews() ([]PageViewModel, error) {
+func getHits() ([]Hit, error) {
 	db := shared.GetDB()
-	var pageViews []PageViewModel
-	err := db.Find(&pageViews).Error
-	return pageViews, err
+	var hits []Hit
+	fmt.Println(&hits)
+	err := db.Find(&hits).Error
+	return hits, err
 }
 
 func SaveOne(data interface{}) error {

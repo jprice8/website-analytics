@@ -2,35 +2,35 @@ package metrics
 
 import "github.com/gin-gonic/gin"
 
-type PageViewSerializer struct {
+type HitSerializer struct {
 	C	*gin.Context
-	PageViewModel
+	Hit
 }
 
-type PageViewsSerializer struct {
+type HitsSerializer struct {
 	C	*gin.Context
-	PageViews []PageViewModel
+	Hits []Hit
 }
 
-type PageViewResponse struct {
-	ID			uint		`json:"-"`
+type HitResponse struct {
+	ID			uint		`json:"id"`
 	Url			string		`json:"url"`
 	CreatedAt	string		`json:"createdAt"`
 }
 
-func (s *PageViewSerializer) Response() PageViewResponse {
-	response := PageViewResponse{
+func (s *HitSerializer) Response() HitResponse {
+	response := HitResponse{
 		ID:			s.ID,
-		Url:		s.url,
+		Url:		s.Url,
 		CreatedAt: 	s.CreatedAt.UTC().Format("2021-01-02T15:04:05.999Z"),
 	}
 	return response
 }
 
-func (s *PageViewsSerializer) Response() []PageViewResponse {
-	response := []PageViewResponse{}
-	for _, pageView := range s.PageViews {
-		serializer := PageViewSerializer{s.C, pageView}
+func (s *HitsSerializer) Response() []HitResponse {
+	response := []HitResponse{}
+	for _, hit := range s.Hits {
+		serializer := HitSerializer{s.C, hit}
 		response = append(response, serializer.Response())
 	}
 	return response

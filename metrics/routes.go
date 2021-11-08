@@ -9,26 +9,25 @@ import (
 )
 
 func PageViewsRegister(router *gin.RouterGroup) {
-	router.GET("/", pageViewsList)
-	router.POST("/", pageViewCreate)
+	router.GET("/", hitsList)
+	// router.POST("/", pageViewCreate)
 }
 
-func pageViewsList(c *gin.Context) {
-	pageViews, err := getAllPageViews()
+func hitsList(c *gin.Context) {
+	hits, err := getHits()
 	if err != nil {
-		c.JSON(http.StatusNotFound, shared.NewError("pageViews", errors.New("Invalid param")))
+		c.JSON(http.StatusNotFound, shared.NewError("hitsList", errors.New("Invalid param")))
 		return
 	}
-	serializer := PageViewsSerializer{c, pageViews}
-	c.JSON(http.StatusOK, gin.H{"pageViews": serializer.Response()})
+	serializer := HitsSerializer{c, hits}
+	c.JSON(http.StatusOK, gin.H{"hits": serializer.Response()})
 }
 
-func pageViewCreate(c *gin.Context) {
-	pageViewModelValidator := NewPageViewModelValidator()
-	if err := SaveOne(&pageViewModelValidator.pageViewModel); err != nil {
-		c.JSON(http.StatusUnprocessableEntity, shared.NewError("database", err))
-		return
-	}
-	serializer := PageViewSerializer{c, pageViewModelValidator.pageViewModel}
-	c.JSON(http.StatusCreated, gin.H{"pageView": serializer.Response()})
-}
+// func createHit(c *gin.Context) {
+// 	if err := SaveOne(&pageViewModelValidator.pageViewModel); err != nil {
+// 		c.JSON(http.StatusUnprocessableEntity, shared.NewError("database", err))
+// 		return
+// 	}
+// 	serializer := PageViewSerializer{c, pageViewModelValidator.pageViewModel}
+// 	c.JSON(http.StatusCreated, gin.H{"pageView": serializer.Response()})
+// }
